@@ -131,13 +131,27 @@ module Poloniex
 
   def self.get( command, params = {} )
     params[:command] = command
-    resource[ 'public' ].get params: params
+    begin
+      resource[ 'public' ].get params: params
+    rescue Exception => e
+      puts "Poloniex API Exception: #{e.backtrace.join("\n\t")}"
+      puts
+      puts "Retrying..."
+      retry
+    end
   end
 
   def self.post( command, params = {} )
     params[:command] = command
     params[:nonce]   = (Time.now.to_f * 10000000).to_i
-    resource[ 'tradingApi' ].post params, { Key: configuration.key , Sign: create_sign( params ) }
+    begin
+      resource[ 'tradingApi' ].post params, { Key: configuration.key , Sign: create_sign( params ) }
+    rescue Exception => e
+      puts "Poloniex API Exception: #{e.backtrace.join("\n\t")}"
+      puts
+      puts "Retrying..."
+      retry
+    end
   end
 
   def self.create_sign( data )
