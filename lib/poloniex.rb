@@ -144,13 +144,20 @@ module Poloniex
   def self.post( command, params = {} )
     params[:command] = command
     params[:nonce]   = (Time.now.to_f * 10000000).to_i
+    retries = 0
     begin
       resource[ 'tradingApi' ].post params, { Key: configuration.key , Sign: create_sign( params ) }
     rescue Exception => e
-      puts "Poloniex API Exception: #{e.backtrace.join("\n\t")}"
-      puts
-      puts "Retrying..."
-      retry
+      retries += 1
+      if retries > 3
+        raise
+      else
+        puts "Poloniex API Exception!\n#{e}: #{e.backtrace.join("\n\t")}"
+        puts
+        puts "Retrying #{retries}/3..."
+        sleep 1
+        retry
+      end
     end
   end
 
